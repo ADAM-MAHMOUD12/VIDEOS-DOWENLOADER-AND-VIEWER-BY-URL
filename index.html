@@ -63,6 +63,7 @@
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
         }
         
         .control-btn:hover {
@@ -134,6 +135,30 @@
             color: #3b82f6;
             border: 1px solid rgba(59, 130, 246, 0.3);
         }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff40;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -167,6 +192,19 @@
                         </div>
                     </div>
 
+                    <!-- Quick Links -->
+                    <div class="mb-4 flex flex-wrap gap-2">
+                        <button onclick="loadDemoVideo('youtube')" class="control-btn px-3 py-1 rounded-lg text-white text-xs">
+                            مثال YouTube
+                        </button>
+                        <button onclick="loadDemoVideo('mp4')" class="control-btn px-3 py-1 rounded-lg text-white text-xs">
+                            مثال MP4
+                        </button>
+                        <button onclick="loadDemoVideo('vimeo')" class="control-btn px-3 py-1 rounded-lg text-white text-xs">
+                            مثال Vimeo
+                        </button>
+                    </div>
+
                     <!-- Status Messages -->
                     <div id="statusMessage" style="display: none;"></div>
 
@@ -179,6 +217,7 @@
                                 controls 
                                 preload="metadata"
                                 style="display: none;"
+                                crossorigin="anonymous"
                             >
                                 متصفحك لا يدعم تشغيل الفيديو
                             </video>
@@ -188,16 +227,28 @@
                                 class="video-player" 
                                 frameborder="0" 
                                 allowfullscreen
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 style="display: none;"
                             ></iframe>
+
+                            <div id="loadingMessage" class="video-player loading" style="display: none;">
+                                جاري تحميل الفيديو...
+                            </div>
 
                             <div id="placeholderMessage" class="video-player flex items-center justify-center text-white/60">
                                 <div class="text-center">
                                     <div class="text-4xl mb-4">📹</div>
                                     <p class="mobile-text">الصق رابط الفيديو واضغط تشغيل</p>
+                                    <p class="mobile-text text-sm mt-2 opacity-70">أو جرب الأمثلة أعلاه</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Video Info -->
+                    <div id="videoInfo" style="display: none;" class="mb-4 p-3 glass-effect rounded-xl text-white">
+                        <h4 class="font-semibold mb-2">معلومات الفيديو:</h4>
+                        <div id="videoDetails"></div>
                     </div>
 
                     <!-- Video Controls -->
@@ -216,6 +267,9 @@
                         </button>
                         <button onclick="downloadVideo()" class="control-btn px-3 sm:px-4 py-2 rounded-lg text-white mobile-button">
                             📥 تحميل
+                        </button>
+                        <button onclick="copyVideoUrl()" class="control-btn px-3 sm:px-4 py-2 rounded-lg text-white mobile-button">
+                            📋 نسخ الرابط
                         </button>
                     </div>
                 </div>
@@ -262,21 +316,21 @@
                 <div class="glass-effect rounded-xl p-3 sm:p-6 mt-4 mobile-padding">
                     <h3 class="text-white font-bold text-lg mb-3 mobile-text">✅ المنصات المدعومة</h3>
                     <ul class="text-white/80 space-y-1 mobile-text">
-                        <li>• Microsoft Teams</li>
-                        <li>• YouTube (تشغيل + تحميل)</li>
-                        <li>• Vimeo</li>
-                        <li>• ملفات MP4 مباشرة</li>
-                        <li>• روابط الفيديو المباشرة</li>
-                        <li>• متوافق مع الجوال والكمبيوتر</li>
+                        <li>• YouTube (تضمين + تحميل) ✅</li>
+                        <li>• Vimeo (تضمين + تحميل) ✅</li>
+                        <li>• ملفات MP4 مباشرة ✅</li>
+                        <li>• روابط الفيديو المباشرة ✅</li>
+                        <li>• Microsoft Teams (محدود) ⚠️</li>
+                        <li>• متوافق مع الجوال والكمبيوتر ✅</li>
                     </ul>
                     
                     <div class="mt-4 p-3 bg-white/10 rounded-lg">
-                        <h4 class="text-white font-semibold mb-2 mobile-text">📱 ميزات الجوال</h4>
+                        <h4 class="text-white font-semibold mb-2 mobile-text">💡 نصائح</h4>
                         <ul class="text-white/70 text-xs space-y-1">
-                            <li>• تحكم باللمس</li>
-                            <li>• تحميل مباشر</li>
-                            <li>• واجهة متجاوبة</li>
-                            <li>• دعم ملء الشاشة</li>
+                            <li>• استخدم روابط مباشرة للفيديو</li>
+                            <li>• تأكد من صحة الرابط</li>
+                            <li>• جرب الأمثلة للاختبار</li>
+                            <li>• استخدم خيار التحميل للحفظ</li>
                         </ul>
                     </div>
                 </div>
@@ -285,13 +339,23 @@
     </div>
 
     <script>
-        let currentPlaylist = JSON.parse(localStorage.getItem('videoPlaylist')) || [];
+        // Use in-memory storage instead of localStorage
+        let currentPlaylist = [];
         let currentVideoIndex = -1;
 
-        // Load playlist on page load
-        window.onload = function() {
-            updatePlaylistDisplay();
+        // Demo videos for testing
+        const demoVideos = {
+            youtube: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            mp4: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            vimeo: 'https://vimeo.com/76979871'
         };
+
+        function loadDemoVideo(type) {
+            if (demoVideos[type]) {
+                document.getElementById('videoUrl').value = demoVideos[type];
+                loadVideo();
+            }
+        }
 
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -301,137 +365,568 @@
             
             setTimeout(() => {
                 statusDiv.style.display = 'none';
-            }, 3000);
+            }, 5000);
+        }
+
+        function showLoading(show = true) {
+            const loading = document.getElementById('loadingMessage');
+            const placeholder = document.getElementById('placeholderMessage');
+            
+            if (show) {
+                loading.style.display = 'flex';
+                placeholder.style.display = 'none';
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+
+        function hideAllPlayers() {
+            document.getElementById('videoPlayer').style.display = 'none';
+            document.getElementById('embedPlayer').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('placeholderMessage').style.display = 'none';
         }
 
         function extractVideoId(url) {
-            // YouTube
+            // YouTube - improved regex
             const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
             const youtubeMatch = url.match(youtubeRegex);
             if (youtubeMatch) {
-                return { type: 'youtube', id: youtubeMatch[1] };
+                return { type: 'youtube', id: youtubeMatch[1], url: url };
             }
 
-            // Vimeo
+            // Vimeo - improved regex
             const vimeoRegex = /(?:vimeo\.com\/)([0-9]+)/;
             const vimeoMatch = url.match(vimeoRegex);
             if (vimeoMatch) {
-                return { type: 'vimeo', id: vimeoMatch[1] };
+                return { type: 'vimeo', id: vimeoMatch[1], url: url };
             }
 
-            // Teams (simplified detection)
+            // Teams detection
             if (url.includes('teams.microsoft.com') || url.includes('sharepoint.com')) {
-                return { type: 'teams', id: url };
+                return { type: 'teams', id: url, url: url };
             }
 
-            // Direct video files
-            if (url.match(/\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i)) {
-                return { type: 'direct', id: url };
+            // Direct video files - improved detection
+            if (url.match(/\.(mp4|webm|ogg|mov|avi|m4v|3gp|flv)(\?.*)?$/i)) {
+                return { type: 'direct', id: url, url: url };
             }
 
-            return { type: 'unknown', id: url };
+            // Check if it's an embed URL
+            if (url.includes('/embed/') || url.includes('embed')) {
+                return { type: 'embed', id: url, url: url };
+            }
+
+            return { type: 'unknown', id: url, url: url };
         }
 
-        function loadVideo() {
+        function updateVideoInfo(videoInfo, success = true) {
+            const infoDiv = document.getElementById('videoInfo');
+            const detailsDiv = document.getElementById('videoDetails');
+            
+            if (success) {
+                detailsDiv.innerHTML = `
+                    <p><strong>النوع:</strong> ${getTypeLabel(videoInfo.type)}</p>
+                    <p><strong>الرابط:</strong> <span class="text-sm opacity-80">${videoInfo.url.substring(0, 50)}${videoInfo.url.length > 50 ? '...' : ''}</span></p>
+                `;
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+
+        function getTypeLabel(type) {
+            const labels = {
+                youtube: 'YouTube',
+                vimeo: 'Vimeo', 
+                direct: 'ملف فيديو مباشر',
+                teams: 'Microsoft Teams',
+                embed: 'فيديو مضمن',
+                unknown: 'نوع غير محدد'
+            };
+            return labels[type] || type;
+        }
+
+        async function loadVideo() {
             const urlInput = document.getElementById('videoUrl');
             const url = urlInput.value.trim();
             
             if (!url) {
-                showStatus('يرجى إدخال رابط الفيديو', 'error');
+                showStatus(`تم تشغيل: ${item.title}`, 'success');
+            }
+        }
+
+        function removeFromPlaylist(id) {
+            currentPlaylist = currentPlaylist.filter(item => item.id !== id);
+            if (currentVideoIndex >= currentPlaylist.length) {
+                currentVideoIndex = -1;
+            }
+            updatePlaylistDisplay();
+            showStatus('تم حذف الفيديو من القائمة', 'info');
+        }
+
+        function clearPlaylist() {
+            if (currentPlaylist.length === 0) {
+                showStatus('القائمة فارغة بالفعل', 'info');
+                return;
+            }
+            
+            if (confirm('هل أنت متأكد من مسح جميع الفيديوهات؟')) {
+                currentPlaylist = [];
+                currentVideoIndex = -1;
+                updatePlaylistDisplay();
+                showStatus('تم مسح القائمة بالكامل', 'info');
+            }
+        }
+
+        async function downloadVideo() {
+            const urlInput = document.getElementById('videoUrl');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showStatus('يرجى إدخال رابط الفيديو أولاً', 'error');
                 return;
             }
 
             const videoInfo = extractVideoId(url);
-            const videoPlayer = document.getElementById('videoPlayer');
-            const embedPlayer = document.getElementById('embedPlayer');
-            const placeholder = document.getElementById('placeholderMessage');
-
-            // Hide all players first
-            videoPlayer.style.display = 'none';
-            embedPlayer.style.display = 'none';
-            placeholder.style.display = 'none';
-
+            showStatus('جاري تحضير التحميل...', 'info');
+            
             try {
                 switch (videoInfo.type) {
+                    case 'direct':
+                        try {
+                            // Create download link for direct videos
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = url.split('/').pop().split('?')[0] || `video_${Date.now()}.mp4`;
+                            a.target = '_blank';
+                            a.rel = 'noopener noreferrer';
+                            
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            
+                            showStatus('تم بدء التحميل! 📥', 'success');
+                        } catch (error) {
+                            showStatus('خطأ في التحميل المباشر', 'error');
+                        }
+                        break;
+
                     case 'youtube':
-                        embedPlayer.src = `https://www.youtube.com/embed/${videoInfo.id}?autoplay=1`;
-                        embedPlayer.style.display = 'block';
-                        showStatus('تم تحميل فيديو YouTube بنجاح', 'success');
+                        // Open YouTube downloader services
+                        const youtubeDownloaders = [
+                            `https://savefrom.net/#url=${encodeURIComponent(url)}`,
+                            `https://www.y2mate.com/youtube/${videoInfo.id}`,
+                            `https://yt1s.com/youtube-to-mp4?q=${encodeURIComponent(url)}`
+                        ];
+                        
+                        window.open(youtubeDownloaders[0], '_blank');
+                        showStatus('تم فتح موقع تحميل YouTube', 'success');
+                        
+                        setTimeout(() => {
+                            if (confirm('هل تريد المزيد من خيارات التحميل؟')) {
+                                youtubeDownloaders.slice(1).forEach(link => {
+                                    setTimeout(() => window.open(link, '_blank'), 500);
+                                });
+                            }
+                        }, 2000);
                         break;
 
                     case 'vimeo':
-                        embedPlayer.src = `https://player.vimeo.com/video/${videoInfo.id}?autoplay=1`;
-                        embedPlayer.style.display = 'block';
-                        showStatus('تم تحميل فيديو Vimeo بنجاح', 'success');
+                        const vimeoDownloadUrl = `https://vimeodownloader.com/vimeo-video-downloader?url=${encodeURIComponent(url)}`;
+                        window.open(vimeoDownloadUrl, '_blank');
+                        showStatus('تم فتح موقع تحميل Vimeo', 'success');
                         break;
 
                     case 'teams':
-                        // For Teams videos, try to extract embed URL or use iframe
-                        if (url.includes('embed')) {
-                            embedPlayer.src = url;
+                        showStatus('فيديوهات Teams تحتاج صلاحيات خاصة للتحميل', 'info');
+                        
+                        // Try to extract direct URL if possible
+                        if (url.includes('sharepoint.com') && url.includes('.mp4')) {
+                            try {
+                                const directUrl = url.replace('/embed', '').replace('?web=1', '');
+                                const a = document.createElement('a');
+                                a.href = directUrl;
+                                a.download = `teams_video_${Date.now()}.mp4`;
+                                a.target = '_blank';
+                                
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                
+                                showStatus('تم محاولة تحميل فيديو Teams', 'info');
+                            } catch (error) {
+                                showStatus('لا يمكن تحميل هذا الفيديو من Teams', 'error');
+                            }
+                        }
+                        break;
+
+                    default:
+                        // For unknown types, try multiple approaches
+                        try {
+                            // First try direct download
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `video_${Date.now()}`;
+                            a.target = '_blank';
+                            a.rel = 'noopener noreferrer';
+                            
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            
+                            showStatus('تم فتح رابط التحميل', 'success');
+                        } catch (error) {
+                            // Fallback to generic downloader
+                            const genericDownloader = `https://savefrom.net/#url=${encodeURIComponent(url)}`;
+                            window.open(genericDownloader, '_blank');
+                            showStatus('تم فتح موقع تحميل عام', 'info');
+                        }
+                        break;
+                }
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showStatus('حدث خطأ أثناء التحميل', 'error');
+                
+                // Final fallback: copy URL to clipboard
+                try {
+                    navigator.clipboard.writeText(url).then(() => {
+                        showStatus('تم نسخ الرابط للحافظة', 'info');
+                    });
+                } catch (clipboardError) {
+                    console.error('Clipboard error:', clipboardError);
+                    showStatus('لا يمكن نسخ الرابط تلقائياً', 'error');
+                }
+            }
+        }
+
+        function copyVideoUrl() {
+            const urlInput = document.getElementById('videoUrl');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showStatus('لا يوجد رابط للنسخ', 'error');
+                return;
+            }
+
+            try {
+                // Modern clipboard API
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        showStatus('تم نسخ الرابط بنجاح! 📋', 'success');
+                    }).catch(() => {
+                        fallbackCopy();
+                    });
+                } else {
+                    fallbackCopy();
+                }
+            } catch (error) {
+                fallbackCopy();
+            }
+
+            function fallbackCopy() {
+                try {
+                    // Fallback for older browsers
+                    urlInput.select();
+                    urlInput.setSelectionRange(0, 99999); // For mobile devices
+                    const successful = document.execCommand('copy');
+                    
+                    if (successful) {
+                        showStatus('تم نسخ الرابط بنجاح! 📋', 'success');
+                    } else {
+                        showStatus('تم تحديد الرابط - اضغط Ctrl+C للنسخ', 'info');
+                    }
+                } catch (error) {
+                    showStatus('تم تحديد الرابط - اضغط Ctrl+C للنسخ', 'info');
+                }
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Space bar for play/pause (only if not typing in input)
+            if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+                e.preventDefault();
+                playPause();
+            }
+            
+            // F for fullscreen
+            if (e.key === 'f' || e.key === 'F') {
+                if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+                    e.preventDefault();
+                    toggleFullscreen();
+                }
+            }
+        });
+
+        // Handle Enter key in inputs
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loadVideo();
+            }
+        });
+
+        document.getElementById('playlistTitle').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addToPlaylist();
+            }
+        });
+
+        // Auto-load video when URL is pasted
+        document.getElementById('videoUrl').addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const url = e.target.value.trim();
+                if (url && confirm('هل تريد تحميل الفيديو تلقائياً؟')) {
+                    loadVideo();
+                }
+            }, 100);
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            updatePlaylistDisplay();
+            showStatus('مرحباً بك في مشغل الفيديو الاحترافي! جرب الأمثلة أو الصق رابط فيديو', 'info');
+        });
+
+        // Handle video player events
+        document.getElementById('videoPlayer').addEventListener('loadstart', function() {
+            showStatus('بدء تحميل الفيديو...', 'info');
+        });
+
+        document.getElementById('videoPlayer').addEventListener('canplay', function() {
+            showStatus('الفيديو جاهز للتشغيل', 'success');
+        });
+
+        document.getElementById('videoPlayer').addEventListener('error', function(e) {
+            console.error('Video error:', e);
+            showStatus('خطأ في تحميل الفيديو - تحقق من الرابط', 'error');
+            hideAllPlayers();
+            document.getElementById('placeholderMessage').style.display = 'flex';
+        });
+
+        // Handle embed player load
+        document.getElementById('embedPlayer').addEventListener('load', function() {
+            showStatus('تم تحميل الفيديو المضمن بنجاح', 'success');
+        });
+
+        // Responsive design enhancements
+        function checkMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        window.addEventListener('resize', function() {
+            // Adjust video player height on resize
+            const videoPlayer = document.getElementById('videoPlayer');
+            const embedPlayer = document.getElementById('embedPlayer');
+            
+            if (checkMobile()) {
+                videoPlayer.style.height = '250px';
+                embedPlayer.style.height = '250px';
+            } else {
+                videoPlayer.style.height = '400px';
+                embedPlayer.style.height = '400px';
+            }
+        });
+
+        // Prevent context menu on video (optional)
+        document.getElementById('videoPlayer').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            showStatus('استخدم الأزرار للتحكم بالفيديو', 'info');
+        });
+
+    </script>
+</body>
+</html>('يرجى إدخال رابط الفيديو', 'error');
+                return;
+            }
+
+            // Show loading
+            showLoading(true);
+            showStatus('جاري تحميل الفيديو...', 'info');
+
+            const videoInfo = extractVideoId(url);
+            const videoPlayer = document.getElementById('videoPlayer');
+            const embedPlayer = document.getElementById('embedPlayer');
+
+            hideAllPlayers();
+
+            try {
+                let success = false;
+
+                switch (videoInfo.type) {
+                    case 'youtube':
+                        try {
+                            const embedUrl = `https://www.youtube.com/embed/${videoInfo.id}?autoplay=0&enablejsapi=1`;
+                            embedPlayer.src = embedUrl;
                             embedPlayer.style.display = 'block';
-                            showStatus('تم تحميل فيديو Teams بنجاح', 'success');
-                        } else {
-                            showStatus('للفيديوهات من Teams، استخدم رابط المشاركة المباشر', 'info');
-                            // Try to load as direct video anyway
-                            videoPlayer.src = url;
-                            videoPlayer.style.display = 'block';
+                            success = true;
+                            showStatus('تم تحميل فيديو YouTube بنجاح', 'success');
+                        } catch (error) {
+                            throw new Error('فشل في تحميل فيديو YouTube');
+                        }
+                        break;
+
+                    case 'vimeo':
+                        try {
+                            const embedUrl = `https://player.vimeo.com/video/${videoInfo.id}?autoplay=0`;
+                            embedPlayer.src = embedUrl;
+                            embedPlayer.style.display = 'block';
+                            success = true;
+                            showStatus('تم تحميل فيديو Vimeo بنجاح', 'success');
+                        } catch (error) {
+                            throw new Error('فشل في تحميل فيديو Vimeo');
                         }
                         break;
 
                     case 'direct':
-                        videoPlayer.src = url;
-                        videoPlayer.style.display = 'block';
-                        showStatus('تم تحميل الفيديو بنجاح', 'success');
+                        try {
+                            videoPlayer.src = url;
+                            videoPlayer.style.display = 'block';
+                            
+                            // Add event listeners for better error handling
+                            videoPlayer.onloadstart = () => showStatus('جاري تحميل الفيديو...', 'info');
+                            videoPlayer.oncanplay = () => {
+                                showStatus('تم تحميل الفيديو بنجاح', 'success');
+                                success = true;
+                            };
+                            videoPlayer.onerror = () => {
+                                showStatus('خطأ في تحميل الفيديو - تحقق من الرابط', 'error');
+                                hideAllPlayers();
+                                document.getElementById('placeholderMessage').style.display = 'flex';
+                            };
+                            
+                            success = true;
+                        } catch (error) {
+                            throw new Error('فشل في تحميل الفيديو المباشر');
+                        }
+                        break;
+
+                    case 'teams':
+                        try {
+                            // Try different methods for Teams videos
+                            if (url.includes('embed')) {
+                                embedPlayer.src = url;
+                                embedPlayer.style.display = 'block';
+                                success = true;
+                                showStatus('تم تحميل فيديو Teams (مضمن)', 'success');
+                            } else {
+                                // Try as direct video
+                                videoPlayer.src = url;
+                                videoPlayer.style.display = 'block';
+                                success = true;
+                                showStatus('جاري محاولة تحميل فيديو Teams...', 'info');
+                            }
+                        } catch (error) {
+                            throw new Error('فشل في تحميل فيديو Teams');
+                        }
+                        break;
+
+                    case 'embed':
+                        try {
+                            embedPlayer.src = url;
+                            embedPlayer.style.display = 'block';
+                            success = true;
+                            showStatus('تم تحميل الفيديو المضمن', 'success');
+                        } catch (error) {
+                            throw new Error('فشل في تحميل الفيديو المضمن');
+                        }
                         break;
 
                     default:
-                        // Try as direct video first
-                        videoPlayer.src = url;
-                        videoPlayer.style.display = 'block';
-                        showStatus('جاري محاولة تحميل الفيديو...', 'info');
-                        
-                        // If direct video fails, try as embed
-                        videoPlayer.onerror = function() {
-                            videoPlayer.style.display = 'none';
-                            embedPlayer.src = url;
-                            embedPlayer.style.display = 'block';
-                        };
+                        // Try multiple methods for unknown types
+                        try {
+                            // First try as direct video
+                            videoPlayer.src = url;
+                            videoPlayer.style.display = 'block';
+                            
+                            videoPlayer.onerror = () => {
+                                // If direct video fails, try as embed
+                                videoPlayer.style.display = 'none';
+                                try {
+                                    embedPlayer.src = url;
+                                    embedPlayer.style.display = 'block';
+                                    showStatus('تم تحميل الفيديو كمضمن', 'info');
+                                } catch (embedError) {
+                                    showStatus('نوع الفيديو غير مدعوم', 'error');
+                                    hideAllPlayers();
+                                    document.getElementById('placeholderMessage').style.display = 'flex';
+                                }
+                            };
+                            
+                            success = true;
+                            showStatus('جاري محاولة تحميل الفيديو...', 'info');
+                        } catch (error) {
+                            throw new Error('فشل في تحميل الفيديو');
+                        }
                         break;
                 }
+
+                // Update video info
+                updateVideoInfo(videoInfo, success);
+
             } catch (error) {
-                showStatus('حدث خطأ في تحميل الفيديو', 'error');
-                placeholder.style.display = 'flex';
+                console.error('Video loading error:', error);
+                showStatus(error.message || 'حدث خطأ في تحميل الفيديو', 'error');
+                hideAllPlayers();
+                document.getElementById('placeholderMessage').style.display = 'flex';
+                updateVideoInfo(videoInfo, false);
+            } finally {
+                showLoading(false);
             }
         }
 
         function playPause() {
             const videoPlayer = document.getElementById('videoPlayer');
             if (videoPlayer.style.display !== 'none') {
-                if (videoPlayer.paused) {
-                    videoPlayer.play();
-                } else {
-                    videoPlayer.pause();
+                try {
+                    if (videoPlayer.paused) {
+                        videoPlayer.play();
+                        showStatus('تم تشغيل الفيديو', 'success');
+                    } else {
+                        videoPlayer.pause();
+                        showStatus('تم إيقاف الفيديو', 'info');
+                    }
+                } catch (error) {
+                    showStatus('خطأ في التحكم بالتشغيل', 'error');
                 }
+            } else {
+                showStatus('لا يوجد فيديو للتحكم به', 'error');
             }
         }
 
         function changeVolume(delta) {
             const videoPlayer = document.getElementById('videoPlayer');
             if (videoPlayer.style.display !== 'none') {
-                videoPlayer.volume = Math.max(0, Math.min(1, videoPlayer.volume + delta));
-                showStatus(`مستوى الصوت: ${Math.round(videoPlayer.volume * 100)}%`, 'info');
+                try {
+                    const newVolume = Math.max(0, Math.min(1, videoPlayer.volume + delta));
+                    videoPlayer.volume = newVolume;
+                    showStatus(`مستوى الصوت: ${Math.round(newVolume * 100)}%`, 'info');
+                } catch (error) {
+                    showStatus('خطأ في تغيير مستوى الصوت', 'error');
+                }
+            } else {
+                showStatus('لا يوجد فيديو للتحكم بصوته', 'error');
             }
         }
 
         function toggleFullscreen() {
             const videoContainer = document.getElementById('videoContainer');
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                videoContainer.requestFullscreen().catch(err => {
-                    showStatus('لا يمكن تفعيل وضع ملء الشاشة', 'error');
-                });
+            try {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    showStatus('تم إلغاء وضع ملء الشاشة', 'info');
+                } else {
+                    videoContainer.requestFullscreen().then(() => {
+                        showStatus('تم تفعيل وضع ملء الشاشة', 'success');
+                    }).catch(() => {
+                        showStatus('لا يمكن تفعيل وضع ملء الشاشة', 'error');
+                    });
+                }
+            } catch (error) {
+                showStatus('وضع ملء الشاشة غير مدعوم', 'error');
             }
         }
 
@@ -450,12 +945,11 @@
                 id: Date.now(),
                 title: title,
                 url: url,
-                addedAt: new Date().toLocaleString('ar-SA')
+                addedAt: new Date().toLocaleString('ar-SA'),
+                type: extractVideoId(url).type
             };
 
             currentPlaylist.push(videoItem);
-            localStorage.setItem('videoPlaylist', JSON.stringify(currentPlaylist));
-            
             titleInput.value = '';
             updatePlaylistDisplay();
             showStatus('تم إضافة الفيديو للقائمة', 'success');
@@ -472,7 +966,7 @@
             container.innerHTML = currentPlaylist.map((item, index) => `
                 <div class="playlist-item ${index === currentVideoIndex ? 'active' : ''} p-3 rounded-lg" onclick="playFromPlaylist(${index})">
                     <div class="font-semibold mobile-text">${item.title}</div>
-                    <div class="text-xs opacity-70 mt-1">${item.addedAt}</div>
+                    <div class="text-xs opacity-70 mt-1">${getTypeLabel(item.type)} - ${item.addedAt}</div>
                     <button onclick="removeFromPlaylist(${item.id}); event.stopPropagation();" class="text-red-400 hover:text-red-300 text-xs mt-2">
                         🗑️ حذف
                     </button>
@@ -487,105 +981,4 @@
                 currentVideoIndex = index;
                 loadVideo();
                 updatePlaylistDisplay();
-            }
-        }
-
-        function removeFromPlaylist(id) {
-            currentPlaylist = currentPlaylist.filter(item => item.id !== id);
-            localStorage.setItem('videoPlaylist', JSON.stringify(currentPlaylist));
-            updatePlaylistDisplay();
-            showStatus('تم حذف الفيديو من القائمة', 'info');
-        }
-
-        function clearPlaylist() {
-            if (confirm('هل أنت متأكد من مسح جميع الفيديوهات؟')) {
-                currentPlaylist = [];
-                currentVideoIndex = -1;
-                localStorage.removeItem('videoPlaylist');
-                updatePlaylistDisplay();
-                showStatus('تم مسح القائمة بالكامل', 'info');
-            }
-        }
-
-        async function downloadVideo() {
-            const urlInput = document.getElementById('videoUrl');
-            const url = urlInput.value.trim();
-            
-            if (!url) {
-                showStatus('يرجى إدخال رابط الفيديو أولاً', 'error');
-                return;
-            }
-
-            const videoInfo = extractVideoId(url);
-            
-            try {
-                if (videoInfo.type === 'direct') {
-                    // For direct video files, create download link
-                    showStatus('جاري تحضير التحميل...', 'info');
-                    
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    
-                    const downloadUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = downloadUrl;
-                    
-                    // Extract filename from URL or use default
-                    const filename = url.split('/').pop().split('?')[0] || 'video.mp4';
-                    a.download = filename;
-                    
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    window.URL.revokeObjectURL(downloadUrl);
-                    showStatus('تم بدء التحميل بنجاح', 'success');
-                    
-                } else if (videoInfo.type === 'youtube') {
-                    // For YouTube, open in new tab with download suggestion
-                    const downloadUrl = `https://www.y2mate.com/youtube/${videoInfo.id}`;
-                    window.open(downloadUrl, '_blank');
-                    showStatus('تم فتح موقع التحميل في نافذة جديدة', 'info');
-                    
-                } else if (videoInfo.type === 'vimeo') {
-                    // For Vimeo, suggest download method
-                    showStatus('لتحميل فيديو Vimeo، استخدم الرابط المباشر للفيديو', 'info');
-                    
-                } else {
-                    // For other types, try direct download or suggest alternatives
-                    try {
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'video';
-                        a.target = '_blank';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        showStatus('تم محاولة التحميل', 'info');
-                    } catch (error) {
-                        showStatus('لا يمكن تحميل هذا النوع من الفيديوهات مباشرة', 'error');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Download error:', error);
-                showStatus('حدث خطأ أثناء التحميل', 'error');
-            }
-        }
-
-        // Handle Enter key in URL input
-        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loadVideo();
-            }
-        });
-
-        // Handle Enter key in title input
-        document.getElementById('playlistTitle').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addToPlaylist();
-            }
-        });
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97fc236b77bee221',t:'MTc1Nzk4MTQwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
-</html>
+                showStatus
